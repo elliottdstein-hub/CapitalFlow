@@ -20,6 +20,8 @@ Each entry records its **basis**, meaning where the decision came from:
 | [D-006](#d-006-deploy-by-source-directory-not-by-the-current-manifest) | Deploy by source directory, not by the current manifest | Accepted | Claude recommendation, accepted by owner |
 | [D-007](#d-007-grant-access-through-permission-sets-not-profiles) | Grant access through permission sets, not profiles | Accepted | Claude recommendation, accepted by owner |
 | [D-008](#d-008-one-logic-less-trigger-per-object-with-a-handler-class) | One logic-less trigger per object, with a handler class | Accepted | Claude recommendation, accepted by owner |
+| [D-009](#d-009-small-business-lending-data-model) | Small business lending data model | Accepted | Owner decision (scope); Claude recommendation, accepted by owner (field design) |
+| [D-010](#d-010-private-sharing-for-loan-applications-and-loans) | Private sharing for loan applications and loans | Proposed | Claude recommendation |
 
 Questions that have no proposal yet are listed under [Open questions](#open-questions).
 
@@ -91,7 +93,7 @@ Questions that have no proposal yet are listed under [Open questions](#open-ques
 
 ### D-005: Raise the source API version before creating metadata
 
-- **Status:** Accepted (not yet applied: `sourceApiVersion` is still 59.0)
+- **Status:** Accepted. Applied on 2026-10-29: `sourceApiVersion` and the manifest version are now 68.0, the version `sf org display` reported for the Developer Edition org. The first objects (D-009) were written before the version was checked. Their source files carry no API version of their own, so they needed no changes.
 - **Basis:** Claude recommendation, accepted by the owner
 - **Date:** Proposed and accepted 2026-10-28
 
@@ -153,11 +155,55 @@ Questions that have no proposal yet are listed under [Open questions](#open-ques
 
 ---
 
+### D-009: Small business lending data model
+
+- **Status:** Accepted
+- **Basis:** Owner decision for the domain, borrower model, pipeline object, and first-branch scope. Claude recommendation, accepted by the owner through plan approval, for the field-level design.
+- **Date:** 2026-10-28
+
+**Context.** CapitalFlow is a Salesforce-first portfolio lending application. Later stages may add an external Python/PostgreSQL service. The first branch needs a data model that later work can build on: approval automation, payments, underwriting calculations, and a borrower portal.
+
+**Decision.**
+- **Domain:** small business lending, offering term loans, lines of credit, and equipment financing.
+- **Borrowers:** standard **Account** for the business and **Contact** for its people. This keeps native features (activities, reports, duplicate rules) and leaves a path to Experience Cloud portal users.
+- **Pipeline:** a custom **`Loan_Application__c`**, from draft through the credit decision, and a separate custom **`Loan__c`** for booked loans. `Loan__c` links back to its application.
+- **Relationships:** lookups, not master-detail. Borrower lookups are required and block deletion of an Account that has applications or loans.
+- **Product list:** one global value set, `Loan_Product`, shared by both objects.
+
+**Alternatives considered.**
+- **Opportunity as the pipeline.** Rejected by the owner. It forces lending semantics onto a sales object.
+- **Person Accounts.** Not suitable for business borrowers, and the setting is irreversible.
+- **A custom Borrower object.** Loses native Account/Contact features.
+- **Master-detail relationships.** Child records would inherit sharing from the Account, which conflicts with D-010. Roll-up summaries would be the main thing lost.
+
+**Consequences.**
+- Automation such as approval creating a loan, or payments updating `Outstanding_Principal__c`, has to be built later. Until then those values are entered by hand.
+- With no master-detail, totals on Account need Apex or Flow, not roll-up summary fields.
+- Payments, collateral, and guarantor junction objects are deferred to later branches.
+
+---
+
+### D-010: Private sharing for loan applications and loans
+
+- **Status:** Proposed. It is already implemented in source because the plan included it, but it isn't confirmed as a lasting decision.
+- **Basis:** Claude recommendation
+- **Date:** 2026-10-28
+
+**Context.** Loan applications and loans contain borrower financial information. Who can see a record should be a deliberate choice.
+
+**Proposal.** Set the internal and external organization-wide defaults to **Private** on both objects. Widen access later with roles, sharing rules, or permission sets that grant View All, once roles such as loan officer and underwriter are defined. The `CapitalFlow_User` permission set grants object access but not View All or Modify All.
+
+**Alternatives.** Public Read Only or Public Read/Write. These are simpler for a single-user demo org, but they don't reflect how a lender would protect borrower data. Tightening later is harder than loosening.
+
+**Tradeoffs.** In a multi-user org, users only see records they own until sharing is added. In the Developer Edition org, the System Administrator sees everything through View All Data, so this has no practical effect today. Changing an OWD later triggers a sharing recalculation.
+
+---
+
 ## Open questions
 
 These need an owner decision, and some need more information, before a proposal makes sense:
 
-- **Business domain and data model.** What CapitalFlow models, and which standard objects (Account, Contact, Opportunity, and so on) are reused versus new custom objects.
+- ~~**Business domain and data model.**~~ Resolved by D-009.
 - **Apex layering.** Whether to separate services (business logic) and selectors (queries) from the start, or keep classes flat until complexity justifies more structure.
 - **Scratch orgs.** Whether to also use scratch orgs for feature work, alongside the Developer Edition org that remains primary (D-003). This would require enabling Dev Hub.
 - **Continuous integration.** Whether to add a pipeline for formatting, linting, and LWC tests, and whether it may contact an org (affects D-001).

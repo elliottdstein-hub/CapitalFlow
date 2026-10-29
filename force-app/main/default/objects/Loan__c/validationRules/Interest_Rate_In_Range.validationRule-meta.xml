@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Interest_Rate_In_Range</fullName>
+    <active>true</active>
+    <description
+  >Interest rate must be at least 0% and below 100%. Percent fields evaluate as decimals in formulas.</description>
+    <errorConditionFormula
+  >OR(Interest_Rate__c &lt; 0, Interest_Rate__c &gt;= 1)</errorConditionFormula>
+    <errorDisplayField>Interest_Rate__c</errorDisplayField>
+    <errorMessage
+  >Interest rate must be at least 0% and less than 100%.</errorMessage>
+</ValidationRule>

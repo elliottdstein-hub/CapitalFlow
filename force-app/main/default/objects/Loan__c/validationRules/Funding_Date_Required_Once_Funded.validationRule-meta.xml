@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Funding_Date_Required_Once_Funded</fullName>
+    <active>true</active>
+    <description
+  >Any loan past Pending Funding must record when it was funded.</description>
+    <errorConditionFormula>AND(
+    NOT(ISPICKVAL(Status__c, "Pending Funding")),
+    ISBLANK(Funding_Date__c)
+)</errorConditionFormula>
+    <errorDisplayField>Funding_Date__c</errorDisplayField>
+    <errorMessage
+  >Enter a funding date once the loan is no longer pending funding.</errorMessage>
+</ValidationRule>

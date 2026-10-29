@@ -133,6 +133,22 @@ Recommended sequence:
 
 Prefer the narrowest scope that covers the change: `--source-dir force-app/main/default/objects/<Object__c>`, or `--metadata "CustomObject:<Object__c>"`. Do not use `--ignore-conflicts` (`-c`), `--ignore-errors` (`-r`), or destructive-change flags without a specific, agreed reason.
 
+`deploy validate` does not accept `NoTestRun`. While the project has no Apex, you can do a metadata-only validation with a dry run instead. This still needs authorization:
+
+```sh
+sf project deploy start --dry-run --test-level NoTestRun --source-dir force-app --target-org <org-alias>
+```
+
+### Assign the permission set (Org change)
+
+Fields deployed from source aren't visible to any profile, including System Administrator, until you have the `CapitalFlow_User` permission set (see ARCHITECTURE.md, Security boundaries). Assigning it creates a record in the org:
+
+```sh
+sf org assign permset --name CapitalFlow_User --target-org <org-alias>
+```
+
+Without `--on-behalf-of`, it's assigned to the org's default user.
+
 ### Retrieve (Org change — overwrites local files)
 
 Retrieving writes org metadata over local source. Check `git status` first so any overwritten work can be reviewed with `git diff`.
@@ -177,7 +193,7 @@ sf org create scratch --definition-file config/project-scratch-def.json --alias 
 
   This overwrites `manifest/package.xml`. See D-006 in [DECISIONS.md](DECISIONS.md).
 
-- **API version 59.0.** `sourceApiVersion` in `sfdx-project.json` is 59.0, several releases behind current. See D-005 in [DECISIONS.md](DECISIONS.md).
+- **`npm install` fails** with an ERESOLVE peer-dependency conflict. `@salesforce/eslint-config-lwc@3.7` requires `@lwc/eslint-plugin-lwc@^2`, but `package.json` pins `^1.1.2`. Until `package.json` is fixed, the pre-commit hook and the npm scripts in Local checks can't run.
 - **No CI.** All checks are run by hand or by the pre-commit hook.
 
 ## Troubleshooting
