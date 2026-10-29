@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Decision_Date_Required_For_Decision</fullName>
+    <active>true</active>
+    <description
+  >A decided application must record when the decision was made.</description>
+    <errorConditionFormula>AND(
+    OR(ISPICKVAL(Status__c, "Approved"), ISPICKVAL(Status__c, "Declined")),
+    ISBLANK(Decision_Date__c)
+)</errorConditionFormula>
+    <errorDisplayField>Decision_Date__c</errorDisplayField>
+    <errorMessage
+  >Enter a decision date when the application is approved or declined.</errorMessage>
+</ValidationRule>
