@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Portions_Must_Equal_Amount_Due</fullName>
+    <active>true</active>
+    <description
+  >When both portions are entered, principal plus interest must equal the amount due.</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Principal_Portion__c)),
+    NOT(ISBLANK(Interest_Portion__c)),
+    Principal_Portion__c + Interest_Portion__c &lt;&gt; Amount_Due__c
+)</errorConditionFormula>
+    <errorDisplayField>Principal_Portion__c</errorDisplayField>
+    <errorMessage
+  >Principal portion plus interest portion must equal the amount due.</errorMessage>
+</ValidationRule>

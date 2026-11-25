@@ -139,6 +139,34 @@ Prefer the narrowest scope that covers the change: `--source-dir force-app/main/
 sf project deploy start --dry-run --test-level NoTestRun --source-dir force-app --target-org <org-alias>
 ```
 
+### Delete metadata removed from source (Org change, destructive)
+
+Deleting a file locally doesn't delete the component from the org. To remove it from the org, list it in a destructive-changes manifest and deploy the rest of the source in the same command. Use `--post-destructive-changes` so layouts and permission sets that used to reference the component are updated *before* it's deleted. Deleted fields go to the org's Deleted Fields list for 15 days, and their data can't be restored once they're purged.
+
+The destructive flags require `--manifest`. They can't be combined with `--source-dir` (verified with CLI 2.156.8). Generate a complete manifest of the source into a scratch folder, so the committed `manifest/package.xml` isn't overwritten (D-006), and keep both manifests outside `force-app/` (Local):
+
+```sh
+sf project generate manifest --source-dir force-app --output-dir <scratch-dir> --name package.xml
+```
+
+Example: removing `Loan__c.Outstanding_Principal__c` (D-011). `destructiveChangesPost.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>Loan__c.Outstanding_Principal__c</members>
+        <name>CustomField</name>
+    </types>
+</Package>
+```
+
+```sh
+sf project deploy start --manifest <scratch-dir>/package.xml --post-destructive-changes <scratch-dir>/destructiveChangesPost.xml --test-level NoTestRun --target-org <org-alias>
+```
+
+Add `--dry-run` first to check it without saving.
+
 ### Assign the permission set (Org change)
 
 Fields deployed from source aren't visible to any profile, including System Administrator, until you have the `CapitalFlow_User` permission set (see ARCHITECTURE.md, Security boundaries). Assigning it creates a record in the org:

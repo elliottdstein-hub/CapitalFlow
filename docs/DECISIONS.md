@@ -22,6 +22,7 @@ Each entry records its **basis**, meaning where the decision came from:
 | [D-008](#d-008-one-logic-less-trigger-per-object-with-a-handler-class) | One logic-less trigger per object, with a handler class | Accepted | Claude recommendation, accepted by owner |
 | [D-009](#d-009-small-business-lending-data-model) | Small business lending data model | Accepted | Owner decision (scope); Claude recommendation, accepted by owner (field design) |
 | [D-010](#d-010-private-sharing-for-loan-applications-and-loans) | Private sharing for loan applications and loans | Proposed | Claude recommendation |
+| [D-011](#d-011-payments-as-a-master-detail-child-of-loan-with-a-calculated-balance) | Payments as a master-detail child of Loan, with a calculated balance | Accepted | Owner decision (scope, balance); Claude recommendation, accepted by owner (structure) |
 
 Questions that have no proposal yet are listed under [Open questions](#open-questions).
 
@@ -177,7 +178,7 @@ Questions that have no proposal yet are listed under [Open questions](#open-ques
 - **Master-detail relationships.** Child records would inherit sharing from the Account, which conflicts with D-010. Roll-up summaries would be the main thing lost.
 
 **Consequences.**
-- Automation such as approval creating a loan, or payments updating `Outstanding_Principal__c`, has to be built later. Until then those values are entered by hand.
+- Automation such as approval creating a loan, or payments updating `Outstanding_Principal__c`, has to be built later. Until then those values are entered by hand. (Update 2026-11-24: `Outstanding_Principal__c` was replaced by a calculated balance; see D-011.)
 - With no master-detail, totals on Account need Apex or Flow, not roll-up summary fields.
 - Payments, collateral, and guarantor junction objects are deferred to later branches.
 
@@ -195,7 +196,39 @@ Questions that have no proposal yet are listed under [Open questions](#open-ques
 
 **Alternatives.** Public Read Only or Public Read/Write. These are simpler for a single-user demo org, but they don't reflect how a lender would protect borrower data. Tightening later is harder than loosening.
 
-**Tradeoffs.** In a multi-user org, users only see records they own until sharing is added. In the Developer Edition org, the System Administrator sees everything through View All Data, so this has no practical effect today. Changing an OWD later triggers a sharing recalculation.
+**Tradeoffs.** In a multi-user org, users only see records they own until sharing is added. Payments (D-011) don't have their own sharing model and inherit their loan's. In the Developer Edition org, the System Administrator sees everything through View All Data, so this has no practical effect today. Changing an OWD later triggers a sharing recalculation.
+
+---
+
+### D-011: Payments as a master-detail child of Loan, with a calculated balance
+
+- **Status:** Accepted
+- **Basis:**
+  - Owner decision: add payments next, and replace the hand-entered `Outstanding_Principal__c` with a calculated balance.
+  - Claude recommendation, accepted by the owner: the object structure.
+- **Date:** 2026-11-24
+
+**Context.** Loans need a repayment record. The loan's remaining principal was a plain currency field, `Outstanding_Principal__c`, typed in by hand. Salesforce can't turn an existing field into a formula.
+
+**Decision.**
+- **One record per installment.** `Loan_Payment__c` holds the schedule (due date, amount due, principal/interest split) and the receipt (amount paid, paid date, method) together.
+- **Master-detail to `Loan__c`.** This is an exception to the lookups-only approach in D-009. A payment has no meaning without its loan and no owner of its own, so it follows the loan's sharing and is deleted with it. Master-detail is also what makes roll-up summary fields possible.
+- **Calculated balance.**
+  - Two roll-ups on `Loan__c`: `Principal_Paid__c` sums the principal portion of installments with status Paid. `Total_Paid__c` sums every amount paid.
+  - `Principal_Balance__c` is a formula: principal minus principal paid.
+  - `Outstanding_Principal__c` is removed. In the org that needs a destructive deploy, which needs authorization, and any values entered in that field are lost.
+
+**Alternatives considered.**
+- **Keep `Outstanding_Principal__c` beside the new balance.** It preserves data, but two balance fields can disagree.
+- **Keep it manual until Apex exists.** No automatic balance in the meantime.
+- **Separate schedule and transaction objects.** These would allow several payments against one installment, or a payment covering several installments. That's more realistic, but more than a portfolio stage-1 app needs. Revisit when payment processing is built.
+- **Lookup instead of master-detail.** Keeps payments independently shareable, but loses native roll-ups.
+
+**Consequences.**
+- A partial payment counts toward `Total_Paid__c` but not `Principal_Paid__c`, because nothing splits it between principal and interest yet.
+- Payment schedules are entered by hand until an amortization generator is built (Apex, per D-008).
+- A payment can't be moved to another loan (`reparentableMasterDetail` is false).
+- Deleting a loan deletes its payments.
 
 ---
 

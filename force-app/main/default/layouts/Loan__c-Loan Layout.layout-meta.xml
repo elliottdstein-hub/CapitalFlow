@@ -63,9 +63,28 @@
                 <behavior>Readonly</behavior>
                 <field>Maturity_Date__c</field>
             </layoutItems>
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <layoutSections>
+        <customLabel>true</customLabel>
+        <detailHeading>true</detailHeading>
+        <editHeading>false</editHeading>
+        <label>Repayment</label>
+        <layoutColumns>
             <layoutItems>
-                <behavior>Edit</behavior>
-                <field>Outstanding_Principal__c</field>
+                <behavior>Readonly</behavior>
+                <field>Principal_Balance__c</field>
+            </layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>Principal_Paid__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>Total_Paid__c</field>
             </layoutItems>
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
@@ -89,6 +108,17 @@
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Installment_Number__c</fields>
+        <fields>Due_Date__c</fields>
+        <fields>Amount_Due__c</fields>
+        <fields>Status__c</fields>
+        <fields>Paid_Date__c</fields>
+        <relatedList>Loan_Payment__c.Loan__c</relatedList>
+        <sortField>Due_Date__c</sortField>
+        <sortOrder>Asc</sortOrder>
+    </relatedLists>
     <relatedLists>
         <relatedList>RelatedEntityHistoryList</relatedList>
     </relatedLists>

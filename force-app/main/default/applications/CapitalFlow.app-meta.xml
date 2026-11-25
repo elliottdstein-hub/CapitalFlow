@@ -19,6 +19,7 @@
     <tabs>standard-Contact</tabs>
     <tabs>Loan_Application__c</tabs>
     <tabs>Loan__c</tabs>
+    <tabs>Loan_Payment__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>CapitalFlow_UtilityBar</utilityBar>
 </CustomApplication>
