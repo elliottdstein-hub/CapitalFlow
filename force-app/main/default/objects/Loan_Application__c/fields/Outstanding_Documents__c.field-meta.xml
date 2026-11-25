@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Outstanding_Documents__c</fullName>
+    <description
+  >Number of required documents still Requested or Rejected.</description>
+    <externalId>false</externalId>
+    <label>Outstanding Documents</label>
+    <summaryFilterItems>
+        <field>Required_Document__c.Status__c</field>
+        <operation>equals</operation>
+        <value>Requested, Rejected</value>
+    </summaryFilterItems>
+    <summaryForeignKey
+  >Required_Document__c.Loan_Application__c</summaryForeignKey>
+    <summaryOperation>count</summaryOperation>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Summary</type>
+</CustomField>

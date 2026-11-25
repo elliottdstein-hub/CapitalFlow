@@ -11,6 +11,11 @@
         <operation>equals</operation>
         <value>Signed</value>
     </summaryFilterItems>
+    <summaryFilterItems>
+        <field>Guarantor__c.Guarantee_Type__c</field>
+        <operation>equals</operation>
+        <value>Personal</value>
+    </summaryFilterItems>
     <summaryForeignKey>Guarantor__c.Loan_Application__c</summaryForeignKey>
     <summaryOperation>sum</summaryOperation>
     <trackHistory>false</trackHistory>

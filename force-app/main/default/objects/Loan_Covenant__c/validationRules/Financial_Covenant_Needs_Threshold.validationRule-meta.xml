@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Financial_Covenant_Needs_Threshold</fullName>
+    <active>true</active>
+    <description
+  >A financial covenant is a metric tested against a threshold.</description>
+    <errorConditionFormula>AND(
+    ISPICKVAL(Covenant_Type__c, "Financial"),
+    OR(ISBLANK(TEXT(Metric__c)), ISBLANK(Threshold__c))
+)</errorConditionFormula>
+    <errorDisplayField>Metric__c</errorDisplayField>
+    <errorMessage
+  >A financial covenant needs a metric and a threshold.</errorMessage>
+</ValidationRule>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Next_Test_After_Last_Test</fullName>
+    <active>true</active>
+    <description>The next test is scheduled after the last one.</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Next_Test_Date__c)),
+    NOT(ISBLANK(Last_Test_Date__c)),
+    Next_Test_Date__c &lt;= Last_Test_Date__c
+)</errorConditionFormula>
+    <errorDisplayField>Next_Test_Date__c</errorDisplayField>
+    <errorMessage
+  >Next test date must be after the last test date.</errorMessage>
+</ValidationRule>

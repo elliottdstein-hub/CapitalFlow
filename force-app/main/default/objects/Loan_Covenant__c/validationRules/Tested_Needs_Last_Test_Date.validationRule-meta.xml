@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Tested_Needs_Last_Test_Date</fullName>
+    <active>true</active>
+    <description>A test result must record when the test happened.</description>
+    <errorConditionFormula>AND(
+    OR(ISPICKVAL(Compliance_Status__c, "Compliant"), ISPICKVAL(Compliance_Status__c, "In Breach")),
+    ISBLANK(Last_Test_Date__c)
+)</errorConditionFormula>
+    <errorDisplayField>Last_Test_Date__c</errorDisplayField>
+    <errorMessage
+  >Enter the last test date for a compliant or breached covenant.</errorMessage>
+</ValidationRule>

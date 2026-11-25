@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Breach_Or_Waiver_Needs_Notes</fullName>
+    <active>true</active>
+    <description>Breaches and waivers must be explained.</description>
+    <errorConditionFormula>AND(
+    OR(ISPICKVAL(Compliance_Status__c, "In Breach"), ISPICKVAL(Compliance_Status__c, "Waived")),
+    ISBLANK(Notes__c)
+)</errorConditionFormula>
+    <errorDisplayField>Notes__c</errorDisplayField>
+    <errorMessage>Add notes describing the breach or the waiver.</errorMessage>
+</ValidationRule>

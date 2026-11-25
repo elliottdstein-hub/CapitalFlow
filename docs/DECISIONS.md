@@ -24,6 +24,7 @@ Each entry records its **basis**, meaning where the decision came from:
 | [D-010](#d-010-private-sharing-for-loan-applications-and-loans) | Private sharing for loan applications and loans | Proposed | Claude recommendation |
 | [D-011](#d-011-payments-as-a-master-detail-child-of-loan-with-a-calculated-balance) | Payments as a master-detail child of Loan, with a calculated balance | Accepted | Owner decision (scope, balance); Claude recommendation, accepted by owner (structure) |
 | [D-012](#d-012-guarantors-as-a-master-detail-child-of-loan-application) | Guarantors as a master-detail child of Loan Application | Proposed | Owner decision (scope); Claude recommendation (structure) |
+| [D-013](#d-013-collateral-underwriting-reviews-required-documents-and-covenants) | Collateral, underwriting reviews, required documents, and covenants | Proposed | Owner decision (which objects); Claude recommendation (design) |
 
 Questions that have no proposal yet are listed under [Open questions](#open-questions).
 
@@ -181,7 +182,7 @@ Questions that have no proposal yet are listed under [Open questions](#open-ques
 **Consequences.**
 - Automation such as approval creating a loan, or payments updating `Outstanding_Principal__c`, has to be built later. Until then those values are entered by hand. (Update 2026-11-24: `Outstanding_Principal__c` was replaced by a calculated balance; see D-011.)
 - With no master-detail, totals on Account need Apex or Flow, not roll-up summary fields.
-- Payments, collateral, and guarantor junction objects are deferred to later branches.
+- Payments, collateral, and guarantor junction objects are deferred to later branches. (Update: payments added in D-011, guarantors in D-012, collateral in D-013.)
 
 ---
 
@@ -247,7 +248,7 @@ Questions that have no proposal yet are listed under [Open questions](#open-ques
 - **One record per guarantee.** `Guarantor__c` is a master-detail child of `Loan_Application__c`. Like payments (D-011), a guarantee has no meaning without its application. It follows the application's sharing and is deleted with it. Master-detail also allows roll-ups.
 - **People or businesses.** A `Guarantee_Type__c` picklist chooses between them, with two lookups: `Guarantor_Contact__c` for personal guarantees and `Guarantor_Account__c` for corporate guarantees. Validation rules require exactly the one that matches the type. The lookups block deleting a Contact or Account that is a guarantor.
 - **Coverage.** Coverage is Unlimited or Limited. Limited needs a `Guaranteed_Amount__c` cap. Signing is tracked with Pending, Signed and Released statuses and a signed date.
-- **Roll-ups on the application:** `Guarantor_Count__c` counts guarantors that aren't Released. `Guaranteed_Ownership__c` totals the ownership % of signed guarantors, so a reviewer can see whether owners have signed.
+- **Roll-ups on the application:** `Guarantor_Count__c` counts guarantors that aren't Released. `Guaranteed_Ownership__c` totals the ownership % of signed personal guarantors (corporate guarantees are excluded), so a reviewer can see whether owners have signed.
 
 **Alternatives considered.**
 - **Contact only.** Simpler, but it can't represent a corporate guarantee.
@@ -260,6 +261,38 @@ Questions that have no proposal yet are listed under [Open questions](#open-ques
 - The borrower's own Account can't be added as a guarantor (validation rule).
 - The Guarantees related lists on Account and Contact aren't on their page layouts, because those layouts aren't in source.
 - Nothing enforces a guarantee policy, such as requiring 20% owners to sign before approval. The roll-ups make it visible, and enforcing it would be later automation.
+
+---
+
+### D-013: Collateral, underwriting reviews, required documents, and covenants
+
+- **Status:** Proposed. Built in source but not yet deployed or confirmed by the owner.
+- **Basis:**
+  - Owner decision: add all four objects (collateral, underwriting review, required document, loan covenant).
+  - Claude recommendation: the field-level design and where each object attaches.
+- **Date:** 2026-11-25
+
+**Context.** The application had a credit decision (`Status__c`, `Decision_Notes__c`) with nothing behind it: no record of what secured the loan, what analysis supported the decision, which documents were collected, or what the borrower must keep doing after funding.
+
+**Proposal.**
+- **Same pattern as D-011 and D-012:** each object is a master-detail child, so it has no owner, follows its parent's sharing, is deleted with the parent, and can't be reparented. Master-detail also enables the roll-ups.
+- **`Collateral__c` on the application.** Collateral is identified and valued during underwriting. `Lendable_Value__c` applies an advance rate per asset. The application rolls up `Total_Collateral_Value__c` (excluding Released items) and calculates `Loan_To_Value__c` from the requested amount.
+- **`Underwriting_Review__c` on the application,** allowing more than one review (for example, a re-review after the terms change). Metrics are entered by the reviewer. A completed review must have a recommendation, risk rating, and date.
+- **`Required_Document__c` on the application,** one record per checklist item. The files themselves aren't stored in custom fields: they would be attached with standard Salesforce Files. The Files related list isn't on the layout yet. The application counts outstanding (Requested or Rejected) items.
+- **`Loan_Covenant__c` on the loan,** because covenants apply after funding and are tested for the loan's life. The loan counts covenants In Breach. The record holds only the latest test result.
+
+**Alternatives considered.**
+- **Collateral on `Loan__c`, or a junction so one asset can secure several loans** (cross-collateralization). More realistic for a large lender. Deferred: it would need a junction object and per-loan allocation of value.
+- **Underwriting metrics as fields on `Loan_Application__c`.** Simpler, but loses the history of multiple reviews and who did each.
+- **Calculating DSCR and other metrics from financial-statement records.** Needs a financial spreading model; out of scope for now.
+- **A covenant test history object** (one record per test). Gives a full audit trail; deferred until test scheduling exists. Field history on `Compliance_Status__c` keeps a basic trail meanwhile.
+- **Lookups instead of master-detail.** Independent sharing, but no native roll-ups, and none of these records needs sharing different from its parent.
+
+**Tradeoffs.**
+- `Loan_To_Value__c` uses the requested amount, not the booked principal, and counts Proposed as well as Pledged collateral. It is blank when there is no collateral.
+- Nothing enforces policy yet: a maximum LTV, a completed review, or verified documents before approval would need validation rules on the application or automation (D-008).
+- Covenant test dates aren't scheduled or advanced automatically, and breaches don't notify anyone.
+- `Loan__c` now has two master-detail children, and `Loan_Application__c` has four. That's within platform limits, but each new roll-up counts toward the per-object roll-up limit.
 
 ---
 

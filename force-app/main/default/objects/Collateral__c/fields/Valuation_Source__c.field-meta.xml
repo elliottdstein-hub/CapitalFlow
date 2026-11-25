@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Valuation_Source__c</fullName>
+    <description>Where the estimated value came from.</description>
+    <externalId>false</externalId>
+    <label>Valuation Source</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Appraisal</fullName>
+                <default>false</default>
+                <label>Appraisal</label>
+            </value>
+            <value>
+                <fullName>Invoice</fullName>
+                <default>false</default>
+                <label>Invoice</label>
+            </value>
+            <value>
+                <fullName>Book Value</fullName>
+                <default>false</default>
+                <label>Book Value</label>
+            </value>
+            <value>
+                <fullName>Borrower Estimate</fullName>
+                <default>false</default>
+                <label>Borrower Estimate</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
