@@ -23,6 +23,7 @@ Each entry records its **basis**, meaning where the decision came from:
 | [D-009](#d-009-small-business-lending-data-model) | Small business lending data model | Accepted | Owner decision (scope); Claude recommendation, accepted by owner (field design) |
 | [D-010](#d-010-private-sharing-for-loan-applications-and-loans) | Private sharing for loan applications and loans | Proposed | Claude recommendation |
 | [D-011](#d-011-payments-as-a-master-detail-child-of-loan-with-a-calculated-balance) | Payments as a master-detail child of Loan, with a calculated balance | Accepted | Owner decision (scope, balance); Claude recommendation, accepted by owner (structure) |
+| [D-012](#d-012-guarantors-as-a-master-detail-child-of-loan-application) | Guarantors as a master-detail child of Loan Application | Proposed | Owner decision (scope); Claude recommendation (structure) |
 
 Questions that have no proposal yet are listed under [Open questions](#open-questions).
 
@@ -229,6 +230,36 @@ Questions that have no proposal yet are listed under [Open questions](#open-ques
 - Payment schedules are entered by hand until an amortization generator is built (Apex, per D-008).
 - A payment can't be moved to another loan (`reparentableMasterDetail` is false).
 - Deleting a loan deletes its payments.
+
+---
+
+### D-012: Guarantors as a master-detail child of Loan Application
+
+- **Status:** Proposed. It's implemented in source but not deployed. The owner chose to add guarantors; the structure below hasn't been confirmed yet.
+- **Basis:**
+  - Owner decision: add guarantors next.
+  - Claude recommendation: the structure.
+- **Date:** 2026-11-24
+
+**Context.** Small business lenders usually require personal guarantees from significant owners, typically anyone with 20% or more. Sometimes they also require a corporate guarantee from a parent or affiliate company. Guarantors are agreed during underwriting, so they belong with the application.
+
+**Proposal.**
+- **One record per guarantee.** `Guarantor__c` is a master-detail child of `Loan_Application__c`. Like payments (D-011), a guarantee has no meaning without its application. It follows the application's sharing and is deleted with it. Master-detail also allows roll-ups.
+- **People or businesses.** A `Guarantee_Type__c` picklist chooses between them, with two lookups: `Guarantor_Contact__c` for personal guarantees and `Guarantor_Account__c` for corporate guarantees. Validation rules require exactly the one that matches the type. The lookups block deleting a Contact or Account that is a guarantor.
+- **Coverage.** Coverage is Unlimited or Limited. Limited needs a `Guaranteed_Amount__c` cap. Signing is tracked with Pending, Signed and Released statuses and a signed date.
+- **Roll-ups on the application:** `Guarantor_Count__c` counts guarantors that aren't Released. `Guaranteed_Ownership__c` totals the ownership % of signed guarantors, so a reviewer can see whether owners have signed.
+
+**Alternatives considered.**
+- **Contact only.** Simpler, but it can't represent a corporate guarantee.
+- **Master-detail to both the application and the Contact (a classic junction).** That would require a business guarantor to be a Contact. Access to a guarantee would also depend on access to the Contact.
+- **Guarantees on `Loan__c` instead of, or as well as, the application.** The loan links back to its application, so its guarantees can be found from there. Copying them onto the loan at booking can come with the approval-to-loan automation if it's needed.
+- **Use the standard Contact–Account relationship.** That records who works for a business, not who guaranteed which application.
+
+**Consequences.**
+- Nothing prevents adding the same guarantor to one application twice. A unique key kept up to date by automation would be needed.
+- The borrower's own Account can't be added as a guarantor (validation rule).
+- The Guarantees related lists on Account and Contact aren't on their page layouts, because those layouts aren't in source.
+- Nothing enforces a guarantee policy, such as requiring 20% owners to sign before approval. The roll-ups make it visible, and enforcing it would be later automation.
 
 ---
 

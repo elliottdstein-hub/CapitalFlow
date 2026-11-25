@@ -1,12 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Corporate_Guarantor_Needs_Account</fullName>
     <active>true</active>
-    <description>A corporate guarantee names a business and not a person.</description>
+    <description
+  >A corporate guarantee names a business and not a person.</description>
     <errorConditionFormula>AND(
     ISPICKVAL(Guarantee_Type__c, "Corporate"),
     OR(ISBLANK(Guarantor_Account__c), NOT(ISBLANK(Guarantor_Contact__c)))
 )</errorConditionFormula>
     <errorDisplayField>Guarantor_Account__c</errorDisplayField>
-    <errorMessage>A corporate guarantee needs a Guarantor (Business) and no Guarantor (Person).</errorMessage>
+    <errorMessage
+  >A corporate guarantee needs a Guarantor (Business) and no Guarantor (Person).</errorMessage>
 </ValidationRule>

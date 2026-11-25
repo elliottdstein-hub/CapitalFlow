@@ -1,8 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Guarantor_Account__c</fullName>
     <deleteConstraint>Restrict</deleteConstraint>
-    <description>Business giving a corporate guarantee, such as a parent or affiliate company. Required when Guarantee Type is Corporate.</description>
+    <description
+  >Business giving a corporate guarantee, such as a parent or affiliate company. Required when Guarantee Type is Corporate.</description>
     <label>Guarantor (Business)</label>
     <referenceTo>Account</referenceTo>
     <relationshipLabel>Guarantees</relationshipLabel>

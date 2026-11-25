@@ -1,7 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Coverage__c</fullName>
-    <description>Unlimited covers the whole debt; Limited caps the guarantor's liability at Guaranteed Amount.</description>
+    <description
+  >Unlimited covers the whole debt; Limited caps the guarantor's liability at Guaranteed Amount.</description>
     <externalId>false</externalId>
     <label>Coverage</label>
     <required>true</required>
