@@ -26,6 +26,8 @@ Each entry records its **basis**, meaning where the decision came from:
 | [D-012](#d-012-guarantors-as-a-master-detail-child-of-loan-application) | Guarantors as a master-detail child of Loan Application | Proposed | Owner decision (scope); Claude recommendation (structure) |
 | [D-013](#d-013-collateral-underwriting-reviews-required-documents-and-covenants) | Collateral, underwriting reviews, required documents, and covenants | Proposed | Owner decision (which objects); Claude recommendation (design) |
 | [D-014](#d-014-financial-statements-disbursements-fees-and-payment-transactions) | Financial statements, disbursements, fees, and payment transactions | Proposed | Owner decision (which objects); Claude recommendation (design) |
+| [D-015](#d-015-apex-layering-thin-controllers-and-service-classes) | Apex layering: thin controllers and service classes | Accepted | Claude recommendation, accepted by owner |
+| [D-016](#d-016-borrower-loan-application-form-with-server-side-applicant-and-status) | Borrower loan application form with server-side applicant and status | Accepted | Owner decision (borrower first, scope, Apex, no Jest yet); Claude recommendation, accepted by owner (design) |
 
 Questions that have no proposal yet are listed under [Open questions](#open-questions).
 
@@ -330,12 +332,65 @@ Questions that have no proposal yet are listed under [Open questions](#open-ques
 
 ---
 
+### D-015: Apex layering: thin controllers and service classes
+
+- **Status:** Accepted
+- **Basis:** Claude recommendation, accepted by the owner on 2026-11-25. This resolves the "Apex layering" open question.
+- **Date:** 2026-11-25
+
+**Context.** The first Apex is being written for the loan application form. Without a convention, business rules end up inside `@AuraEnabled` methods, where Flows, triggers, or future APIs can't reuse them.
+
+**Decision.**
+- **Controllers** (`<Feature>Controller`) are the only `@AuraEnabled` entry points. They convert between component data and records, call a service, and turn exceptions into user-safe `AuraHandledException` messages. They contain no business rules.
+- **Services** (`<Feature>Service`, `with sharing`) hold the business rules and run queries and DML in user mode.
+- **No separate selector (query) layer yet.** Queries live in the service until the same query is needed in several places.
+- **Triggers** still follow D-008: they delegate to a handler, which can call services.
+
+**Alternatives considered.**
+- **A single controller class.** Simplest now, but the rules would have to be pulled out later for reuse.
+- **Full service, selector, and domain layers** (for example fflib). That's a third-party framework under D-002, and too much structure for the current size.
+
+**Consequences.** Two classes and two test classes per feature. Services can be called from future triggers, Flow actions, or REST endpoints without changes.
+
+---
+
+### D-016: Borrower loan application form with server-side applicant and status
+
+- **Status:** Accepted. Deployed to the Developer Edition org on 2026-11-25.
+- **Basis:**
+  - Owner decisions: build the borrower-facing form first; v1 covers only the loan request; use an Apex controller rather than Lightning Data Service alone; skip LWC Jest tests for now.
+  - Claude recommendation, accepted by the owner through plan approval: the design below.
+- **Date:** 2026-11-25
+
+**Context.** Borrowers will eventually apply through an Experience Cloud site. No site, portal licenses, or portal users exist yet. `Loan_Application__c.Status__c` is a required field, so field-level security can't stop a user with edit access from setting it to Approved.
+
+**Decision.**
+- **One LWC, `loanApplicationForm`.** It shows the applicant's business read-only, and lets the borrower edit product, purpose, amount, and term, then Save draft or Submit. It targets Contact record pages, so it can be tested internally now, and Experience Cloud pages for later.
+- **The server decides who the applicant is.**
+  - A portal user's own Contact, from `User.ContactId`. The browser can't override it.
+  - Otherwise, the Contact id the component passes, which is its record page's `recordId`.
+- **The server owns borrower, primary contact, status, and submitted date.** The browser sends only the four loan request fields. Drafts can be edited only by their own business and only while they're Draft. Submit saves and changes status in one update.
+- **Everything runs as the user.** Apex is `with sharing`, with user-mode queries and DML.
+- **Messages appear inside the form.** Toasts don't work in Experience Cloud.
+
+**Alternatives considered.**
+- **Lightning Data Service only (`lightning-record-edit-form`).** Less code, but the browser would supply borrower and status.
+- **A multi-step wizard** covering financials, guarantors, and documents. Rejected for v1, to get one path working end to end first.
+
+**Consequences.**
+- Status is protected only on this code path. Before portal users get edit access to `Loan_Application__c`, add a validation rule (or another control) that limits status changes by external users.
+- A borrower permission set (object and field access, Apex class access) is still to be created with the portal.
+- The portal-user path (`User.ContactId`) isn't covered by Apex tests, because tests can't create portal users without a portal license and site. Only the internal path and permission-set access are tested.
+- There are no LWC Jest tests until `npm install` is fixed. The component is tested manually.
+
+---
+
 ## Open questions
 
 These need an owner decision, and some need more information, before a proposal makes sense:
 
 - ~~**Business domain and data model.**~~ Resolved by D-009.
-- **Apex layering.** Whether to separate services (business logic) and selectors (queries) from the start, or keep classes flat until complexity justifies more structure.
+- ~~**Apex layering.**~~ Resolved by D-015.
 - **Scratch orgs.** Whether to also use scratch orgs for feature work, alongside the Developer Edition org that remains primary (D-003). This would require enabling Dev Hub.
 - **Continuous integration.** Whether to add a pipeline for formatting, linting, and LWC tests, and whether it may contact an org (affects D-001).
 
