@@ -6,7 +6,7 @@ This document describes the architecture as it is currently implemented. Setup a
 
 ## Purpose and scope
 
-CapitalFlow is a small business lending application built on Salesforce (D-009). It covers borrowers, loan applications through the credit decision (with guarantors, collateral, underwriting reviews, and a document checklist), booked loans, loan payments, and loan covenants. Approval automation, generating payment schedules, calculating underwriting metrics, and a borrower portal are planned but **not implemented**.
+CapitalFlow is a small business lending application built on Salesforce (D-009). It covers borrowers, loan applications through the credit decision (with guarantors, collateral, underwriting reviews, and a document checklist), booked loans (with disbursements, loan payments, payment transactions, fees, and covenants), and the borrower's financial statements. Approval automation, generating payment schedules, calculating underwriting metrics, and a borrower portal are planned but **not implemented**.
 
 ## Current state
 
@@ -20,6 +20,7 @@ The following are **in source only** and haven't been deployed:
 
 - `Guarantor__c` and its two roll-ups on `Loan_Application__c` (D-012).
 - `Collateral__c`, `Underwriting_Review__c`, `Required_Document__c`, `Loan_Covenant__c`, and their roll-ups and formulas on `Loan_Application__c` and `Loan__c` (D-013, Proposed).
+- `Financial_Statement__c`, `Disbursement__c`, `Fee__c`, `Payment_Transaction__c`, their roll-ups and formulas on `Loan__c`, and the `Disbursed_Not_Above_Principal` validation rule (D-014, Proposed).
 
 Since there is no source tracking, later changes made in the org won't appear here until they are retrieved.
 
@@ -38,8 +39,8 @@ Since there is no source tracking, later changes made in the org won't appear he
 
 | Layer | Components | Notes |
 | --- | --- | --- |
-| Data model (objects, fields, relationships) | `Loan_Application__c` and its children `Guarantor__c`, `Collateral__c`, `Underwriting_Review__c`, `Required_Document__c`; `Loan__c` and its children `Loan_Payment__c`, `Loan_Covenant__c`; two Account fields, `Loan_Product` global value set | See Data model below |
-| User interface | `CapitalFlow` Lightning app, for desktop and mobile; page layouts for all eight custom objects; tabs for applications, loans, and payments. The other child objects are reached from their parent record's related lists | Standard Lightning record pages. The app uses the utility bar `CapitalFlow_UtilityBar`, which exists only in the org (see Constraints) |
+| Data model (objects, fields, relationships) | `Loan_Application__c` and its children `Guarantor__c`, `Collateral__c`, `Underwriting_Review__c`, `Required_Document__c`, `Financial_Statement__c`; `Loan__c` and its children `Loan_Payment__c`, `Loan_Covenant__c`, `Disbursement__c`, `Fee__c`, `Payment_Transaction__c`; two Account fields, `Loan_Product` global value set | See Data model below |
+| User interface | `CapitalFlow` Lightning app, for desktop and mobile; page layouts for all twelve custom objects; tabs for applications, loans, and payments. The other child objects are reached from their parent record's related lists | Standard Lightning record pages. The app uses the utility bar `CapitalFlow_UtilityBar`, which exists only in the org (see Constraints) |
 | Apex (triggers, handlers, services, controllers) | None | Trigger convention: D-008 |
 | Lightning Web Components | None | |
 | Automation (Flow, scheduled or async Apex) | None. Validation rules only | |
@@ -58,11 +59,17 @@ Account (borrower business)
  │      ├── Collateral__c.Loan_Application__c          master-detail
  │      ├── Underwriting_Review__c.Loan_Application__c master-detail
  │      │      └── Reviewer__c → User                  lookup
- │      └── Required_Document__c.Loan_Application__c   master-detail
+ │      ├── Required_Document__c.Loan_Application__c   master-detail
+ │      └── Financial_Statement__c.Loan_Application__c master-detail
  └── Loan__c.Borrower__c                      lookup, required, delete restricted
         ├── Loan_Application__c → application lookup, delete restricted
         ├── Loan_Payment__c.Loan__c            master-detail (children are deleted with the loan)
-        └── Loan_Covenant__c.Loan__c           master-detail
+        ├── Loan_Covenant__c.Loan__c           master-detail
+        ├── Disbursement__c.Loan__c            master-detail
+        ├── Fee__c.Loan__c                     master-detail
+        │      └── Loan_Payment__c → installment   lookup, same loan only (filter)
+        └── Payment_Transaction__c.Loan__c     master-detail
+               └── Loan_Payment__c → installment   lookup, same loan only (filter)
 ```
 
 | Object | Purpose | Key fields |
@@ -74,11 +81,16 @@ Account (borrower business)
 | `Collateral__c` (`COL-00000`) | An asset pledged to secure an application | `Collateral_Type__c` (Real Estate, Equipment, Vehicle, Accounts Receivable, Inventory, Cash or Deposits, Other), `Description__c`, `Status__c` (Proposed → Pledged → Released), `Estimated_Value__c`, `Advance_Rate__c`, `Lendable_Value__c` (formula: value × advance rate), `Lien_Position__c`, `Valuation_Source__c`, `Valuation_Date__c` |
 | `Underwriting_Review__c` (`UWR-00000`) | A credit analysis of an application and the reviewer's recommendation | `Status__c` (In Progress → Completed), `Reviewer__c` (User), `Completed_Date__c`, `Credit_Score__c`, `Debt_Service_Coverage_Ratio__c`, `Annual_Revenue__c`, `Risk_Rating__c` (1 – Excellent … 5 – Substandard), `Recommendation__c` (Approve / Approve with Conditions / Decline), `Conditions__c`, `Analysis__c` |
 | `Required_Document__c` (`DOC-00000`) | One item on an application's document checklist | `Document_Type__c` (tax returns, bank statements, financial statements, ID, formation documents, Other), `Status__c` (Requested → Received → Verified, or Rejected / Waived), `Period__c`, `Requested_Date__c`, `Due_Date__c`, `Received_Date__c`, `Notes__c` |
-| `Loan__c` (`LN-00000`) | A booked loan | `Status__c` (Pending Funding → Active → Paid Off / Defaulted), `Loan_Product__c`, `Principal_Amount__c`, `Interest_Rate__c`, `Term_Months__c`, `Funding_Date__c`, `Maturity_Date__c` (formula: funding date + term). Covenants: `Covenants_In_Breach__c` (roll-up: covenants In Breach). Repayment: `Principal_Paid__c` (roll-up: principal portion of Paid installments), `Total_Paid__c` (roll-up: all amounts paid), `Principal_Balance__c` (formula: principal − principal paid) |
+| `Financial_Statement__c` (`FIN-00000`) | One period of the borrower's financial results | `Period_Type__c` (Annual / Year to Date / Quarterly), `Period_End_Date__c`, `Source__c` (Tax Return, CPA Audited, CPA Reviewed, Company Prepared), `Revenue__c`, `Net_Income__c`, `Interest_Expense__c`, `Income_Tax_Expense__c`, `Depreciation_Amortization__c`, `EBITDA__c` (formula), `Annual_Debt_Service__c`, `DSCR__c` (formula: EBITDA ÷ debt service), `Total_Assets__c`, `Total_Liabilities__c`, `Net_Worth__c` (formula), `Debt_To_Worth__c` (formula) |
+| `Loan__c` (`LN-00000`) | A booked loan | `Status__c` (Pending Funding → Active → Paid Off / Defaulted), `Loan_Product__c`, `Principal_Amount__c`, `Interest_Rate__c`, `Term_Months__c`, `Funding_Date__c`, `Maturity_Date__c` (formula: funding date + term). Covenants: `Covenants_In_Breach__c` (roll-up: covenants In Breach). Funding: `Total_Disbursed__c` (roll-up: Completed disbursements), `Undisbursed_Amount__c` (formula: principal − total disbursed). Fees: `Fees_Outstanding__c` (roll-up: Assessed fees), `Fees_Paid__c` (roll-up: Paid fees). Receipts: `Total_Received__c` (roll-up: Cleared payment transactions). Repayment: `Principal_Paid__c` (roll-up: principal portion of Paid installments), `Total_Paid__c` (roll-up: all amounts paid), `Principal_Balance__c` (formula: principal − principal paid) |
 | `Loan_Payment__c` (`PMT-000000`) | One scheduled installment on a loan, and what was paid against it | `Status__c` (Scheduled → Paid / Partially Paid / Missed), `Installment_Number__c`, `Due_Date__c`, `Amount_Due__c`, `Principal_Portion__c`, `Interest_Portion__c`, `Amount_Paid__c`, `Paid_Date__c`, `Payment_Method__c` (ACH, Wire, Check) |
+| `Loan_Covenant__c` (`COV-00000`) | An ongoing condition the borrower must meet for the life of a loan, and its latest test result | `Covenant_Type__c` (Financial, Reporting, Affirmative, Negative), `Description__c`, `Metric__c`, `Threshold__c`, `Test_Frequency__c`, `Compliance_Status__c` (Not Yet Tested / Compliant / In Breach / Waived), `Last_Test_Date__c`, `Next_Test_Date__c`, `Notes__c` |
+| `Disbursement__c` (`DSB-00000`) | Money sent out on a loan: initial funding or a line-of-credit draw | `Amount__c`, `Status__c` (Scheduled → Sent → Completed, or Failed / Cancelled), `Disbursement_Date__c`, `Method__c` (ACH, Wire, Check), `Payee__c`, `Reference_Number__c`, `Notes__c` |
+| `Fee__c` (`FEE-00000`) | A charge on a loan | `Fee_Type__c` (Origination, Late Payment, Returned Payment, Prepayment, Documentation, Other), `Amount__c`, `Status__c` (Assessed → Paid / Waived), `Assessed_Date__c`, `Due_Date__c`, `Paid_Date__c`, `Loan_Payment__c` (installment, same loan), `Notes__c` |
+| `Payment_Transaction__c` (`TXN-000000`) | Money received from the borrower, and how it was applied | `Amount__c`, `Transaction_Date__c`, `Status__c` (Pending → Cleared / Returned), `Method__c`, `Reference_Number__c`, `Loan_Payment__c` (installment, same loan), `Principal_Applied__c`, `Interest_Applied__c`, `Fees_Applied__c`, `Unapplied_Amount__c` (formula), `Notes__c` |
 
 - `Loan_Product__c` on both objects uses the `Loan_Product` global value set (Term Loan, Line of Credit, Equipment Financing), so the lists can't drift apart.
-- Field history is tracked for the status field on every custom object (`Compliance_Status__c` on covenants), and for `Risk_Rating__c` and `Recommendation__c` on underwriting reviews.
+- Field history is tracked for the status field on every custom object (`Compliance_Status__c` on covenants), and for `Risk_Rating__c` and `Recommendation__c` on underwriting reviews and `Revenue__c` and `Net_Income__c` on financial statements.
 - Validation rules enforce:
   - positive amounts;
   - terms of 1–360 months;
@@ -93,15 +105,20 @@ Account (borrower business)
   - on collateral: a positive value and an advance rate of 0–100%; a value, valuation source, and valuation date once Pledged; no future valuation date; a lien position for real estate;
   - on underwriting reviews: a credit score of 300–850; a non-negative DSCR and revenue; a recommendation, risk rating, and completed date once Completed; conditions for an Approve with Conditions recommendation;
   - on required documents: a received date once Received or Verified; a due date no earlier than the requested date; notes for Rejected, Waived, or Other documents;
-  - on covenants: a metric and threshold for financial covenants; a last test date once Compliant or In Breach; notes for a breach or waiver; a next test date after the last test date.
-- Applications and loans each have their own owner. Lookups are used so they don't inherit access from the Account (D-009). Every child object (payments, guarantors, collateral, underwriting reviews, required documents, covenants) is master-detail: it has no owner and follows its parent record (D-011, D-012, D-013).
+  - on covenants: a metric and threshold for financial covenants; a last test date once Compliant or In Breach; notes for a breach or waiver; a next test date after the last test date;
+  - on financial statements: a period end date no later than today; no negative amounts except net income;
+  - on disbursements: a positive amount; a date and method once Sent or Completed; notes when Failed or Cancelled;
+  - on loans: completed disbursements no greater than the principal, except on lines of credit (the roll-up recalculation runs this rule, so it blocks the disbursement save);
+  - on fees: a positive amount; a paid date once Paid; notes when Waived or Other; an installment for late or returned payment fees; a due date no earlier than the assessed date;
+  - on payment transactions: a positive amount; no negative applied amounts; applied amounts no greater than the amount received; no future transaction date; notes when Returned.
+- Applications and loans each have their own owner. Lookups are used so they don't inherit access from the Account (D-009). Every child object (payments, guarantors, collateral, underwriting reviews, required documents, financial statements, covenants, disbursements, fees, payment transactions) is master-detail: it has no owner and follows its parent record (D-011, D-012, D-013).
 - Nothing stops the same person or business being added twice to one application. That would need a unique key kept up to date by automation.
 - Nothing creates a `Loan__c` from an approved application, or generates a loan's payment schedule, yet. Users create both by hand.
 - `Principal_Balance__c` only reduces for installments marked **Paid**. Partially paid installments count toward `Total_Paid__c` but not toward principal paid, because splitting a partial payment between principal and interest needs payment-application logic that doesn't exist yet.
 
 ## Data flows
 
-There's no automation yet. Users create and edit records through the standard Lightning UI in the `CapitalFlow` app. Validation rules run on save. Saving a payment recalculates the loan's roll-ups, and with them `Principal_Balance__c`, on the platform without any custom code. Saving a guarantor, collateral item, or required document likewise recalculates the application's roll-ups (and `Loan_To_Value__c` with them), and saving a covenant recalculates the loan's breach count.
+There's no automation yet. Users create and edit records through the standard Lightning UI in the `CapitalFlow` app. Validation rules run on save. Saving a payment recalculates the loan's roll-ups, and with them `Principal_Balance__c`, on the platform without any custom code. Saving a guarantor, collateral item, or required document likewise recalculates the application's roll-ups (and `Loan_To_Value__c` with them), and saving a covenant, disbursement, fee, or payment transaction recalculates the loan's roll-ups.
 
 ## Security boundaries
 
@@ -109,8 +126,8 @@ There's no automation yet. Users create and edit records through the standard Li
 - **All child objects are Controlled by Parent:** anyone who can see a loan or application can see its child records, and editing one requires edit access to the parent.
 - **Permission set `CapitalFlow_User`** (D-007):
   - Grants read on Account and Contact.
-  - Grants full create/read/edit/delete on the eight custom objects, without View All or Modify All.
-  - Grants field access on every non-required custom field. Formula and roll-up fields (`Maturity_Date__c`, `Principal_Paid__c`, `Total_Paid__c`, `Principal_Balance__c`, `Guarantor_Count__c`, `Guaranteed_Ownership__c`, `Lendable_Value__c`, `Total_Collateral_Value__c`, `Loan_To_Value__c`, `Outstanding_Documents__c`, `Covenants_In_Breach__c`) are read-only.
+  - Grants full create/read/edit/delete on the twelve custom objects, without View All or Modify All.
+  - Grants field access on every non-required custom field. Formula and roll-up fields (`Maturity_Date__c`, `Principal_Paid__c`, `Total_Paid__c`, `Principal_Balance__c`, `Guarantor_Count__c`, `Guaranteed_Ownership__c`, `Lendable_Value__c`, `Total_Collateral_Value__c`, `Loan_To_Value__c`, `Outstanding_Documents__c`, `Covenants_In_Breach__c`, `EBITDA__c`, `DSCR__c`, `Net_Worth__c`, `Debt_To_Worth__c`, `Unapplied_Amount__c`, `Total_Disbursed__c`, `Undisbursed_Amount__c`, `Fees_Outstanding__c`, `Fees_Paid__c`, `Total_Received__c`) are read-only.
   - Grants the three tabs and the app.
 - **Required fields** aren't listed in the permission set, because their access can't be restricted.
 - **New fields have no profile access.** Fields deployed from source aren't visible to any profile, including System Administrator, until the user is assigned `CapitalFlow_User`.
@@ -126,3 +143,5 @@ There's no automation yet. Users create and edit records through the standard Li
 - **Lending policy not enforced.** Nothing blocks approving an application without enough signed guarantees, above a maximum loan-to-value, without a completed underwriting review, or with documents outstanding. Covenant tests aren't scheduled.
 - **Underwriting metrics are typed in.** Credit score, DSCR, and revenue on `Underwriting_Review__c` are entered by the reviewer, not calculated or pulled from a credit bureau.
 - **Collateral is tied to the application, not the loan.** A loan reaches its collateral through `Loan__c.Loan_Application__c`.
+- **Two records of repayment.** Installment status and amounts on `Loan_Payment__c` drive `Principal_Paid__c`, `Total_Paid__c`, and `Principal_Balance__c`. `Payment_Transaction__c` records the money actually received, but nothing applies it to installments or fees yet, so users must keep both up to date by hand (D-014).
+- **Financial statements don't feed underwriting.** `Underwriting_Review__c` metrics are still typed in; nothing copies DSCR or revenue from `Financial_Statement__c`. Financials belong to one application, so a returning borrower's statements are entered again.

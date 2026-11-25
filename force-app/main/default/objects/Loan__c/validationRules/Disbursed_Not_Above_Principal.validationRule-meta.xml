@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Disbursed_Not_Above_Principal</fullName>
+    <active>true</active>
+    <description
+  >Term loans and equipment financing cannot disburse more than the principal. Lines of credit are exempt because repaid amounts can be drawn again.</description>
+    <errorConditionFormula>AND(
+    NOT(ISPICKVAL(Loan_Product__c, "Line of Credit")),
+    Total_Disbursed__c &gt; Principal_Amount__c
+)</errorConditionFormula>
+    <errorMessage
+  >Completed disbursements can't exceed the principal amount on a term loan or equipment financing.</errorMessage>
+</ValidationRule>

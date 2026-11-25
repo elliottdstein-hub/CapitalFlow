@@ -25,6 +25,7 @@ Each entry records its **basis**, meaning where the decision came from:
 | [D-011](#d-011-payments-as-a-master-detail-child-of-loan-with-a-calculated-balance) | Payments as a master-detail child of Loan, with a calculated balance | Accepted | Owner decision (scope, balance); Claude recommendation, accepted by owner (structure) |
 | [D-012](#d-012-guarantors-as-a-master-detail-child-of-loan-application) | Guarantors as a master-detail child of Loan Application | Proposed | Owner decision (scope); Claude recommendation (structure) |
 | [D-013](#d-013-collateral-underwriting-reviews-required-documents-and-covenants) | Collateral, underwriting reviews, required documents, and covenants | Proposed | Owner decision (which objects); Claude recommendation (design) |
+| [D-014](#d-014-financial-statements-disbursements-fees-and-payment-transactions) | Financial statements, disbursements, fees, and payment transactions | Proposed | Owner decision (which objects); Claude recommendation (design) |
 
 Questions that have no proposal yet are listed under [Open questions](#open-questions).
 
@@ -223,7 +224,7 @@ Questions that have no proposal yet are listed under [Open questions](#open-ques
 **Alternatives considered.**
 - **Keep `Outstanding_Principal__c` beside the new balance.** It preserves data, but two balance fields can disagree.
 - **Keep it manual until Apex exists.** No automatic balance in the meantime.
-- **Separate schedule and transaction objects.** These would allow several payments against one installment, or a payment covering several installments. That's more realistic, but more than a portfolio stage-1 app needs. Revisit when payment processing is built.
+- **Separate schedule and transaction objects.** These would allow several payments against one installment, or a payment covering several installments. That's more realistic, but more than a portfolio stage-1 app needs. Revisit when payment processing is built. (Update: `Payment_Transaction__c` was added alongside the schedule in D-014.)
 - **Lookup instead of master-detail.** Keeps payments independently shareable, but loses native roll-ups.
 
 **Consequences.**
@@ -293,6 +294,39 @@ Questions that have no proposal yet are listed under [Open questions](#open-ques
 - Nothing enforces policy yet: a maximum LTV, a completed review, or verified documents before approval would need validation rules on the application or automation (D-008).
 - Covenant test dates aren't scheduled or advanced automatically, and breaches don't notify anyone.
 - `Loan__c` now has two master-detail children, and `Loan_Application__c` has four. That's within platform limits, but each new roll-up counts toward the per-object roll-up limit.
+
+---
+
+### D-014: Financial statements, disbursements, fees, and payment transactions
+
+- **Status:** Proposed. Built in source but not yet deployed or confirmed by the owner.
+- **Basis:**
+  - Owner decision: add these four objects.
+  - Claude recommendation: the field-level design and where each object attaches.
+- **Date:** 2026-11-25
+
+**Context.** Underwriting metrics were typed in with nothing behind them. Booked loans had no record of money going out, money actually coming in (as opposed to the installment schedule), or charges other than principal and interest.
+
+**Proposal.**
+- **Same pattern as D-011 to D-013:** each object is a master-detail child, so it has no owner, follows its parent's sharing, is deleted with the parent, and enables roll-ups.
+- **`Financial_Statement__c` on the application,** one record per period. Formulas calculate EBITDA, DSCR (EBITDA ÷ annual debt service), net worth, and debt-to-worth from the entered figures.
+- **`Disbursement__c` on the loan.** The loan rolls up `Total_Disbursed__c` (Completed only) and calculates `Undisbursed_Amount__c`. A validation rule on `Loan__c` stops completed disbursements exceeding the principal, except on lines of credit, where repaid amounts can be drawn again.
+- **`Fee__c` on the loan,** with an optional lookup to the installment (required for late and returned payment fees), filtered to installments on the same loan. The loan rolls up fees outstanding and fees paid.
+- **`Payment_Transaction__c` on the loan,** one record per receipt, with an optional, same-loan installment lookup and fields showing how the money was split between principal, interest, and fees. The loan rolls up `Total_Received__c` (Cleared only).
+- **Installment lookups clear rather than block** (`SetNull`), so deleting an installment doesn't fail because a fee or transaction points to it.
+- **`Loan_Payment__c` and its roll-ups are unchanged.** Transactions sit beside the schedule instead of replacing how the balance is calculated.
+
+**Alternatives considered.**
+- **Financial statements on Account,** so a returning borrower's history is reused across applications. More realistic, but master-detail to Account would make access follow Account sharing (at odds with D-009 and D-010), and a lookup loses roll-ups. Revisit with a borrower-level view.
+- **Calculating the balance from transactions instead of installments.** The right end state, but it needs payment-application logic (Apex, per D-008) to split each receipt across installments and fees. Changing the existing balance roll-ups now would break D-011's behavior without that logic.
+- **Fees as installment fields.** Can't represent origination or documentation fees, or more than one fee per installment.
+- **One money-movement object for draws and receipts.** Fewer objects, but it mixes outgoing and incoming money, which have different fields and statuses.
+
+**Tradeoffs.**
+- Until payment application is automated, users must update both the transaction and the installment, and the two can disagree. `Total_Received__c` and `Total_Paid__c` may differ.
+- `Undisbursed_Amount__c` ignores repayments, so on a line of credit it isn't the available credit.
+- DSCR on a financial statement and DSCR on an underwriting review are separate, unlinked fields.
+- `Loan__c` now has seven roll-up summary fields, within the per-object limit.
 
 ---
 

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>EBITDA__c</fullName>
+    <description
+  >Earnings before interest, taxes, depreciation, and amortization: net income plus those three expenses.</description>
+    <externalId>false</externalId>
+    <formula
+  >Net_Income__c + Interest_Expense__c + Income_Tax_Expense__c + Depreciation_Amortization__c</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>EBITDA</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Applied_Not_Above_Amount</fullName>
+    <active>true</active>
+    <description
+  >A payment cannot be applied for more than was received.</description>
+    <errorConditionFormula
+  >BLANKVALUE(Principal_Applied__c, 0) + BLANKVALUE(Interest_Applied__c, 0) + BLANKVALUE(Fees_Applied__c, 0) &gt; BLANKVALUE(Amount__c, 0)</errorConditionFormula>
+    <errorMessage
+  >Principal, interest, and fees applied can't add up to more than the amount received.</errorMessage>
+</ValidationRule>

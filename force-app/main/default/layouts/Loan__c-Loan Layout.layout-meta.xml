@@ -105,6 +105,37 @@
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
     <layoutSections>
+        <customLabel>true</customLabel>
+        <detailHeading>true</detailHeading>
+        <editHeading>false</editHeading>
+        <label>Funding, Fees, and Receipts</label>
+        <layoutColumns>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>Total_Disbursed__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>Undisbursed_Amount__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>Total_Received__c</field>
+            </layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>Fees_Outstanding__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>Fees_Paid__c</field>
+            </layoutItems>
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <layoutSections>
         <customLabel>false</customLabel>
         <detailHeading>true</detailHeading>
         <editHeading>false</editHeading>
@@ -144,6 +175,39 @@
         <relatedList>Loan_Covenant__c.Loan__c</relatedList>
         <sortField>Next_Test_Date__c</sortField>
         <sortOrder>Asc</sortOrder>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Amount__c</fields>
+        <fields>Status__c</fields>
+        <fields>Disbursement_Date__c</fields>
+        <fields>Method__c</fields>
+        <fields>Payee__c</fields>
+        <relatedList>Disbursement__c.Loan__c</relatedList>
+        <sortField>Disbursement_Date__c</sortField>
+        <sortOrder>Desc</sortOrder>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Transaction_Date__c</fields>
+        <fields>Amount__c</fields>
+        <fields>Status__c</fields>
+        <fields>Method__c</fields>
+        <fields>Loan_Payment__c</fields>
+        <relatedList>Payment_Transaction__c.Loan__c</relatedList>
+        <sortField>Transaction_Date__c</sortField>
+        <sortOrder>Desc</sortOrder>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Fee_Type__c</fields>
+        <fields>Amount__c</fields>
+        <fields>Status__c</fields>
+        <fields>Assessed_Date__c</fields>
+        <fields>Due_Date__c</fields>
+        <relatedList>Fee__c.Loan__c</relatedList>
+        <sortField>Assessed_Date__c</sortField>
+        <sortOrder>Desc</sortOrder>
     </relatedLists>
     <relatedLists>
         <relatedList>RelatedEntityHistoryList</relatedList>

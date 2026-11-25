@@ -86,6 +86,24 @@
         <style>TwoColumnsTopToBottom</style>
     </layoutSections>
     <relatedLists>
+        <fields>NAME</fields>
+        <fields>Transaction_Date__c</fields>
+        <fields>Amount__c</fields>
+        <fields>Status__c</fields>
+        <fields>Principal_Applied__c</fields>
+        <fields>Interest_Applied__c</fields>
+        <relatedList>Payment_Transaction__c.Loan_Payment__c</relatedList>
+        <sortField>Transaction_Date__c</sortField>
+        <sortOrder>Desc</sortOrder>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Fee_Type__c</fields>
+        <fields>Amount__c</fields>
+        <fields>Status__c</fields>
+        <relatedList>Fee__c.Loan_Payment__c</relatedList>
+    </relatedLists>
+    <relatedLists>
         <relatedList>RelatedEntityHistoryList</relatedList>
     </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
