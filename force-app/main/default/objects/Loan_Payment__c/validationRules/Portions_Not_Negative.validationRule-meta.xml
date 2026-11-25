@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Portions_Not_Negative</fullName>
+    <active>true</active>
+    <description
+  >Principal and interest portions can't be negative.</description>
+    <errorConditionFormula
+  >OR(Principal_Portion__c &lt; 0, Interest_Portion__c &lt; 0)</errorConditionFormula>
+    <errorDisplayField>Principal_Portion__c</errorDisplayField>
+    <errorMessage
+  >Principal and interest portions can't be negative.</errorMessage>
+</ValidationRule>

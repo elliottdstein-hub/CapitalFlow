@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Total_Paid__c</fullName>
+    <description
+  >Sum of Amount Paid across all installments, including partial payments.</description>
+    <externalId>false</externalId>
+    <label>Total Paid</label>
+    <summarizedField>Loan_Payment__c.Amount_Paid__c</summarizedField>
+    <summaryForeignKey>Loan_Payment__c.Loan__c</summaryForeignKey>
+    <summaryOperation>sum</summaryOperation>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Summary</type>
+</CustomField>

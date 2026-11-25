@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Loan_To_Value__c</fullName>
+    <description
+  >Requested amount divided by total collateral value. Blank when there is no collateral.</description>
+    <externalId>false</externalId>
+    <formula
+  >IF(Total_Collateral_Value__c &gt; 0, Requested_Amount__c / Total_Collateral_Value__c, NULL)</formula>
+    <formulaTreatBlanksAs>BlankAsBlank</formulaTreatBlanksAs>
+    <label>Loan-to-Value</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Percent</type>
+</CustomField>

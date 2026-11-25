@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Debt_To_Worth__c</fullName>
+    <description
+  >Total liabilities divided by net worth. Blank when net worth is zero or negative.</description>
+    <externalId>false</externalId>
+    <formula
+  >IF(Total_Assets__c - Total_Liabilities__c &gt; 0, Total_Liabilities__c / (Total_Assets__c - Total_Liabilities__c), NULL)</formula>
+    <formulaTreatBlanksAs>BlankAsBlank</formulaTreatBlanksAs>
+    <label>Debt-to-Worth</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

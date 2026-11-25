@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Personal_Guarantor_Needs_Contact</fullName>
+    <active>true</active>
+    <description
+  >A personal guarantee names a person and not a business.</description>
+    <errorConditionFormula>AND(
+    ISPICKVAL(Guarantee_Type__c, "Personal"),
+    OR(ISBLANK(Guarantor_Contact__c), NOT(ISBLANK(Guarantor_Account__c)))
+)</errorConditionFormula>
+    <errorDisplayField>Guarantor_Contact__c</errorDisplayField>
+    <errorMessage
+  >A personal guarantee needs a Guarantor (Person) and no Guarantor (Business).</errorMessage>
+</ValidationRule>

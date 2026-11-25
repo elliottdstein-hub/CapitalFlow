@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Received_Needs_Date</fullName>
+    <active>true</active>
+    <description
+  >Received or verified documents must record when they arrived.</description>
+    <errorConditionFormula>AND(
+    OR(ISPICKVAL(Status__c, "Received"), ISPICKVAL(Status__c, "Verified")),
+    ISBLANK(Received_Date__c)
+)</errorConditionFormula>
+    <errorDisplayField>Received_Date__c</errorDisplayField>
+    <errorMessage
+  >Enter the received date for a received or verified document.</errorMessage>
+</ValidationRule>

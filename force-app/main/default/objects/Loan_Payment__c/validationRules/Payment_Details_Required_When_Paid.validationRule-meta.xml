@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Payment_Details_Required_When_Paid</fullName>
+    <active>true</active>
+    <description
+  >A paid or partially paid installment must record when and how much was received.</description>
+    <errorConditionFormula>AND(
+    OR(ISPICKVAL(Status__c, "Paid"), ISPICKVAL(Status__c, "Partially Paid")),
+    OR(ISBLANK(Paid_Date__c), ISBLANK(Amount_Paid__c), Amount_Paid__c &lt;= 0)
+)</errorConditionFormula>
+    <errorDisplayField>Amount_Paid__c</errorDisplayField>
+    <errorMessage
+  >Enter the amount paid and paid date for a paid or partially paid installment.</errorMessage>
+</ValidationRule>

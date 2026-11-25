@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Payment_Fee_Needs_Installment</fullName>
+    <active>true</active>
+    <description
+  >Late and returned payment fees are charged against a specific installment.</description>
+    <errorConditionFormula>AND(
+    OR(ISPICKVAL(Fee_Type__c, "Late Payment"), ISPICKVAL(Fee_Type__c, "Returned Payment")),
+    ISBLANK(Loan_Payment__c)
+)</errorConditionFormula>
+    <errorDisplayField>Loan_Payment__c</errorDisplayField>
+    <errorMessage
+  >Choose the installment this late or returned payment fee relates to.</errorMessage>
+</ValidationRule>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Due_Date_After_Assessed</fullName>
+    <active>true</active>
+    <description>A fee cannot be due before it was charged.</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Due_Date__c)),
+    NOT(ISBLANK(Assessed_Date__c)),
+    Due_Date__c &lt; Assessed_Date__c
+)</errorConditionFormula>
+    <errorDisplayField>Due_Date__c</errorDisplayField>
+    <errorMessage>Due date can't be before the assessed date.</errorMessage>
+</ValidationRule>

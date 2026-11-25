@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Failed_Or_Cancelled_Needs_Notes</fullName>
+    <active>true</active>
+    <description
+  >Failed and cancelled disbursements must be explained.</description>
+    <errorConditionFormula>AND(
+    OR(ISPICKVAL(Status__c, "Failed"), ISPICKVAL(Status__c, "Cancelled")),
+    ISBLANK(Notes__c)
+)</errorConditionFormula>
+    <errorDisplayField>Notes__c</errorDisplayField>
+    <errorMessage
+  >Explain why the disbursement failed or was cancelled.</errorMessage>
+</ValidationRule>

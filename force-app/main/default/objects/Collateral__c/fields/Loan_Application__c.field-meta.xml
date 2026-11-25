@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Loan_Application__c</fullName>
+    <description
+  >Application this collateral secures. Access to the collateral follows access to the application.</description>
+    <externalId>false</externalId>
+    <label>Loan Application</label>
+    <referenceTo>Loan_Application__c</referenceTo>
+    <relationshipLabel>Collateral</relationshipLabel>
+    <relationshipName>Collateral</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

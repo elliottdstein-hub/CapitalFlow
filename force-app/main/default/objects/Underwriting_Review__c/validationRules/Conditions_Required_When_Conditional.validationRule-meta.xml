@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Conditions_Required_When_Conditional</fullName>
+    <active>true</active>
+    <description
+  >A conditional approval must say what the conditions are.</description>
+    <errorConditionFormula>AND(
+    ISPICKVAL(Recommendation__c, "Approve with Conditions"),
+    ISBLANK(Conditions__c)
+)</errorConditionFormula>
+    <errorDisplayField>Conditions__c</errorDisplayField>
+    <errorMessage
+  >Describe the conditions for an Approve with Conditions recommendation.</errorMessage>
+</ValidationRule>

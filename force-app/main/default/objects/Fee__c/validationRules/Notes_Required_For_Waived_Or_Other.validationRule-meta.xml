@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Notes_Required_For_Waived_Or_Other</fullName>
+    <active>true</active>
+    <description>Waivers and "Other" fees need an explanation.</description>
+    <errorConditionFormula>AND(
+    OR(ISPICKVAL(Status__c, "Waived"), ISPICKVAL(Fee_Type__c, "Other")),
+    ISBLANK(Notes__c)
+)</errorConditionFormula>
+    <errorDisplayField>Notes__c</errorDisplayField>
+    <errorMessage
+  >Add notes explaining a waived fee or describing an "Other" fee.</errorMessage>
+</ValidationRule>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DSCR_Not_Negative</fullName>
+    <active>true</active>
+    <description>A coverage ratio below zero is not meaningful.</description>
+    <errorConditionFormula
+  >Debt_Service_Coverage_Ratio__c &lt; 0</errorConditionFormula>
+    <errorDisplayField>Debt_Service_Coverage_Ratio__c</errorDisplayField>
+    <errorMessage>DSCR can't be negative.</errorMessage>
+</ValidationRule>

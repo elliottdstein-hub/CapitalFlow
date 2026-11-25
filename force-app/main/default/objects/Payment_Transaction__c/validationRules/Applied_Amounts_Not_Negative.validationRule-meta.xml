@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Applied_Amounts_Not_Negative</fullName>
+    <active>true</active>
+    <description
+  >Amounts applied to principal, interest, or fees cannot be negative.</description>
+    <errorConditionFormula
+  >OR(Principal_Applied__c &lt; 0, Interest_Applied__c &lt; 0, Fees_Applied__c &lt; 0)</errorConditionFormula>
+    <errorMessage
+  >Principal, interest, and fees applied can't be negative.</errorMessage>
+</ValidationRule>

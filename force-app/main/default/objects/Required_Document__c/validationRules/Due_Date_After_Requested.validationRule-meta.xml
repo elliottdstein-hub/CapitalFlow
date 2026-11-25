@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Due_Date_After_Requested</fullName>
+    <active>true</active>
+    <description>A document cannot be due before it was requested.</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Due_Date__c)),
+    NOT(ISBLANK(Requested_Date__c)),
+    Due_Date__c &lt; Requested_Date__c
+)</errorConditionFormula>
+    <errorDisplayField>Due_Date__c</errorDisplayField>
+    <errorMessage>Due date can't be before the requested date.</errorMessage>
+</ValidationRule>

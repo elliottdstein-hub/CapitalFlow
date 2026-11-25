@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Real_Estate_Needs_Lien_Position</fullName>
+    <active>true</active>
+    <description
+  >Real estate liens are ranked, so the position must be recorded.</description>
+    <errorConditionFormula>AND(
+    ISPICKVAL(Collateral_Type__c, "Real Estate"),
+    ISBLANK(TEXT(Lien_Position__c))
+)</errorConditionFormula>
+    <errorDisplayField>Lien_Position__c</errorDisplayField>
+    <errorMessage
+  >Enter the lien position for real estate collateral.</errorMessage>
+</ValidationRule>

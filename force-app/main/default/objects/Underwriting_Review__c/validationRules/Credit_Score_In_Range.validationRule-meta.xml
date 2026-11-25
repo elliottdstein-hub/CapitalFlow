@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Credit_Score_In_Range</fullName>
+    <active>true</active>
+    <description>Credit scores run from 300 to 850.</description>
+    <errorConditionFormula
+  >OR(Credit_Score__c &lt; 300, Credit_Score__c &gt; 850)</errorConditionFormula>
+    <errorDisplayField>Credit_Score__c</errorDisplayField>
+    <errorMessage>Credit score must be between 300 and 850.</errorMessage>
+</ValidationRule>

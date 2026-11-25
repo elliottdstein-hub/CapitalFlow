@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Risk_Rating__c</fullName>
+    <description
+  >Internal risk grade, 1 (lowest risk) to 5 (highest).</description>
+    <externalId>false</externalId>
+    <label>Risk Rating</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>1 - Excellent</fullName>
+                <default>false</default>
+                <label>1 - Excellent</label>
+            </value>
+            <value>
+                <fullName>2 - Good</fullName>
+                <default>false</default>
+                <label>2 - Good</label>
+            </value>
+            <value>
+                <fullName>3 - Acceptable</fullName>
+                <default>false</default>
+                <label>3 - Acceptable</label>
+            </value>
+            <value>
+                <fullName>4 - Watch</fullName>
+                <default>false</default>
+                <label>4 - Watch</label>
+            </value>
+            <value>
+                <fullName>5 - Substandard</fullName>
+                <default>false</default>
+                <label>5 - Substandard</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Sent_Needs_Date_And_Method</fullName>
+    <active>true</active>
+    <description>Money that has gone out must record when and how.</description>
+    <errorConditionFormula>AND(
+    OR(ISPICKVAL(Status__c, "Sent"), ISPICKVAL(Status__c, "Completed")),
+    OR(ISBLANK(Disbursement_Date__c), ISBLANK(TEXT(Method__c)))
+)</errorConditionFormula>
+    <errorDisplayField>Disbursement_Date__c</errorDisplayField>
+    <errorMessage
+  >Enter the disbursement date and method once the money is sent.</errorMessage>
+</ValidationRule>

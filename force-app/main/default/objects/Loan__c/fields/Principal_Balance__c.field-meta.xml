@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Principal_Balance__c</fullName>
+    <description
+  >Principal still owed: principal amount minus Principal Paid. Replaces the hand-entered Outstanding Principal field.</description>
+    <externalId>false</externalId>
+    <formula>Principal_Amount__c - Principal_Paid__c</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Principal Balance</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+    <unique>false</unique>
+</CustomField>
