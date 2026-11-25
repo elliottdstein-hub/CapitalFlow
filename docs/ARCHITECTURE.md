@@ -10,17 +10,18 @@ CapitalFlow is a small business lending application built on Salesforce (D-009).
 
 ## Current state
 
-`force-app/main/default/` contains the first data model (from the `Create-Initial-Objects` branch). It's declarative only: custom objects and fields, validation rules, page layouts, tabs, a Lightning app, and one permission set. There is no Apex, no triggers, no LWC, no Flow, and no integrations yet.
+`force-app/main/default/` contains the data model (from the `Create-Initial-Objects` branch): custom objects and fields, validation rules, page layouts, tabs, a Lightning app, and one permission set. It also contains the first code: a borrower loan application form (`loanApplicationForm` LWC) and its two Apex classes. These come from the `Applicant-Create-Loan-Application` branch (D-016). There are no triggers, no Flow, and no integrations yet.
 
 The applications and loans metadata was deployed to the Developer Edition org (`vscodeOrg`) on 2026-10-29 (deploy ID `0Afbm00000le4oDCAQ`), and `CapitalFlow_User` is assigned to the org's admin user.
 
 `Loan_Payment__c` and the Loan repayment fields were deployed on 2026-11-24 (deploy ID `0Afbm00000pevobCAA`). The same deploy deleted `Loan__c.Outstanding_Principal__c` from the org (D-011).
 
-The following are **in source only** and haven't been deployed:
+On 2026-11-25 all of `force-app` was deployed (deploy ID `0Afbm00000pm08PCAQ`, `RunLocalTests`, 22 tests passing).
+- **New in this deploy:** `LoanApplicationController`, `LoanApplicationService`, their tests, the `loanApplicationForm` LWC, and `CapitalFlow_User`'s access to the controller (D-016).
+- **Already in the org:** the guarantor, collateral, underwriting review, required document, covenant, financial statement, disbursement, fee, and payment transaction objects (D-012 to D-014). The dry run reported them as changed, not created.
+- **Test run afterwards:** the two test classes (run `707bm00001ZXUR2`). 24 tests passed. Coverage is 97% for `LoanApplicationController` and 95% for `LoanApplicationService`.
 
-- `Guarantor__c` and its two roll-ups on `Loan_Application__c` (D-012).
-- `Collateral__c`, `Underwriting_Review__c`, `Required_Document__c`, `Loan_Covenant__c`, and their roll-ups and formulas on `Loan_Application__c` and `Loan__c` (D-013, Proposed).
-- `Financial_Statement__c`, `Disbursement__c`, `Fee__c`, `Payment_Transaction__c`, their roll-ups and formulas on `Loan__c`, and the `Disbursed_Not_Above_Principal` validation rule (D-014, Proposed).
+`loanApplicationForm` isn't on any Lightning page yet.
 
 Since there is no source tracking, later changes made in the org won't appear here until they are retrieved.
 
@@ -41,8 +42,8 @@ Since there is no source tracking, later changes made in the org won't appear he
 | --- | --- | --- |
 | Data model (objects, fields, relationships) | `Loan_Application__c` and its children `Guarantor__c`, `Collateral__c`, `Underwriting_Review__c`, `Required_Document__c`, `Financial_Statement__c`; `Loan__c` and its children `Loan_Payment__c`, `Loan_Covenant__c`, `Disbursement__c`, `Fee__c`, `Payment_Transaction__c`; two Account fields, `Loan_Product` global value set | See Data model below |
 | User interface | `CapitalFlow` Lightning app, for desktop and mobile; page layouts for all twelve custom objects; tabs for applications, loans, and payments. The other child objects are reached from their parent record's related lists | Standard Lightning record pages. The app uses the utility bar `CapitalFlow_UtilityBar`, which exists only in the org (see Constraints) |
-| Apex (triggers, handlers, services, controllers) | None | Trigger convention: D-008 |
-| Lightning Web Components | None | |
+| Apex (triggers, handlers, services, controllers) | `LoanApplicationController` (`@AuraEnabled` entry point for the form) and `LoanApplicationService` (applicant lookup, save draft, submit), with tests. No triggers | Layering: D-015. Trigger convention: D-008 |
+| Lightning Web Components | `loanApplicationForm`: the borrower's loan request (product, purpose, amount, term), with Save draft and Submit | Targets: Contact record pages (for internal testing) and Experience Cloud pages. No Experience Cloud site exists yet (D-016) |
 | Automation (Flow, scheduled or async Apex) | None. Validation rules only | |
 | Integrations (named credentials, external services) | None | |
 
@@ -118,7 +119,29 @@ Account (borrower business)
 
 ## Data flows
 
-There's no automation yet. Users create and edit records through the standard Lightning UI in the `CapitalFlow` app. Validation rules run on save. Saving a payment recalculates the loan's roll-ups, and with them `Principal_Balance__c`, on the platform without any custom code. Saving a guarantor, collateral item, or required document likewise recalculates the application's roll-ups (and `Loan_To_Value__c` with them), and saving a covenant, disbursement, fee, or payment transaction recalculates the loan's roll-ups.
+**Borrower loan application form** (D-016):
+
+```
+loanApplicationForm (LWC)
+  ├─ getObjectInfo / getPicklistValues ──────────► product and purpose options
+  └─ Apex calls ──► LoanApplicationController ──► LoanApplicationService ──► Loan_Application__c
+       getApplicant(contactId)         who the applicant is, their business, and their latest draft
+       saveDraft(contactId, input)     insert or update a Draft
+       submitApplication(contactId, input)   save and set Submitted + Submitted Date in one update
+```
+
+- **The applicant is decided on the server.**
+  - For a portal user, it's the Contact linked to their User. `contactId` is ignored.
+  - For an internal user, it's the Contact whose record page hosts the form (`recordId`).
+  - The application's Borrower is that Contact's Account, and its Primary Contact is the Contact.
+- **The browser sends only four fields:** product, purpose, amount, and term. The service sets borrower, contact, status, and submitted date itself. It refuses to change an application from another business, and refuses to change one that's no longer Draft.
+- **A draft needs an amount**, because `Requested_Amount__c` is required on the object. Submitting needs all four fields. A refused submission saves nothing.
+- **Error messages:**
+  - Messages from the service and from validation rules are shown to the user as written.
+  - Any other error is replaced with a generic message, so no internal detail reaches the browser.
+  - Messages appear inside the card rather than as toasts, because toasts don't work in Experience Cloud.
+
+**Everything else:** there's no other automation yet. Users create and edit records through the standard Lightning UI in the `CapitalFlow` app. Validation rules run on save. Saving a payment recalculates the loan's roll-ups, and with them `Principal_Balance__c`, on the platform without any custom code. Saving a guarantor, collateral item, or required document likewise recalculates the application's roll-ups (and `Loan_To_Value__c` with them), and saving a covenant, disbursement, fee, or payment transaction recalculates the loan's roll-ups.
 
 ## Security boundaries
 
@@ -129,6 +152,9 @@ There's no automation yet. Users create and edit records through the standard Li
   - Grants full create/read/edit/delete on the twelve custom objects, without View All or Modify All.
   - Grants field access on every non-required custom field. Formula and roll-up fields (`Maturity_Date__c`, `Principal_Paid__c`, `Total_Paid__c`, `Principal_Balance__c`, `Guarantor_Count__c`, `Guaranteed_Ownership__c`, `Lendable_Value__c`, `Total_Collateral_Value__c`, `Loan_To_Value__c`, `Outstanding_Documents__c`, `Covenants_In_Breach__c`, `EBITDA__c`, `DSCR__c`, `Net_Worth__c`, `Debt_To_Worth__c`, `Unapplied_Amount__c`, `Total_Disbursed__c`, `Undisbursed_Amount__c`, `Fees_Outstanding__c`, `Fees_Paid__c`, `Total_Received__c`) are read-only.
   - Grants the three tabs and the app.
+  - Grants access to the `LoanApplicationController` Apex class.
+- **Apex runs in user mode.** `LoanApplicationService` is `with sharing`, and every query and DML statement runs `WITH USER_MODE` / `AccessLevel.USER_MODE`. The running user's object access, field access, and sharing therefore all apply, exactly as in the standard UI.
+- **Status is guarded only in the form's code path.** `Status__c` is a required field, so field-level security can't hide it. Someone with edit access to an application could still change its status through the standard UI or the API. Borrowers will need a validation rule or a restricted page when portal users exist (D-016).
 - **Required fields** aren't listed in the permission set, because their access can't be restricted.
 - **New fields have no profile access.** Fields deployed from source aren't visible to any profile, including System Administrator, until the user is assigned `CapitalFlow_User`.
 - **No sharing rules, roles, or Apex sharing** exist in source.

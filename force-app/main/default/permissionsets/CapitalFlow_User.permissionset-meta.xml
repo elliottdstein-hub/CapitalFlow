@@ -4,6 +4,10 @@
         <application>CapitalFlow</application>
         <visible>true</visible>
     </applicationVisibilities>
+    <classAccesses>
+        <apexClass>LoanApplicationController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <description
   >Work with CapitalFlow borrowers, loan applications, and loans. Grants create, read, edit, and delete on records the user can see; it does not grant View All or Modify All. Required fields are omitted because their access cannot be restricted.</description>
     <fieldPermissions>

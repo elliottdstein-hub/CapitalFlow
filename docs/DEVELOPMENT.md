@@ -194,6 +194,20 @@ sf apex run test --test-level RunLocalTests --code-coverage --result-format huma
 sf apex run test --class-names <ClassNameTest> --result-format human --wait 10 --target-org <org-alias>
 ```
 
+Current test classes: `LoanApplicationServiceTest` and `LoanApplicationControllerTest`. `LoanApplicationServiceTest` creates a Standard User with `CapitalFlow_User` to check permission-set access. That user needs a free Salesforce license in the org, and Developer Edition orgs have very few. If that test fails with `LICENSE_LIMIT_EXCEEDED`, free up a license or change the test to a profile whose license has seats.
+
+Now that the project has Apex, deploys need tests. Use `--test-level RunLocalTests` for deploys and validations, not `NoTestRun`.
+
+### Try the loan application form (manual, Org change)
+
+The `loanApplicationForm` component can be added to a Contact record page for internal testing. Adding it changes a Lightning page in the org, so do it yourself or authorize it:
+
+1. Open any Contact that belongs to an Account, then go to **Setup gear → Edit Page**.
+2. Drag **Loan Application Form** (under Custom components) onto the page, then **Save**. Activate the page if prompted.
+3. You need `CapitalFlow_User` assigned to see the fields and call the Apex controller.
+
+The form acts for that Contact and its Account. Portal users will see their own Contact once an Experience Cloud site exists (D-016).
+
 ### Scripts
 
 | File | What it does | Level |
@@ -231,7 +245,7 @@ sf org create scratch --definition-file config/project-scratch-def.json --alias 
 | Commits succeed without formatting or linting | Hook not installed. Run `npm install`. |
 | `npm run …` fails with "command not found" for prettier, eslint, or sfdx-lwc-jest | Dev dependencies not installed. Run `npm install`. |
 | `npm run lint` reports "No files matching the pattern" | No Aura or LWC JavaScript exists yet. ESLint 8 exits with an error when its glob matches nothing. This is expected until the first component is added. |
-| `npm test` reports no tests found | No LWC Jest tests exist yet. Expected until the first component is added. |
+| `npm test` reports no tests found | No LWC Jest tests exist yet. `loanApplicationForm` is tested manually until `npm install` is fixed (D-016). |
 | An `sf` command says `--target-org` is required | No default org is set. Pass `--target-org <org-alias>`, or run `sf config set target-org <org-alias>` (Local). |
 | `sf project retrieve preview` errors | The Developer Edition org has no source tracking. Use explicit `retrieve start --metadata …` instead. |
 | Objects or fields missing after a manifest-based deploy | See "Manifest excludes declarative metadata" above. |
